@@ -131,7 +131,7 @@ const SCHEMA = {
   ],
   blocks: [
     { id:'dach_blitzschutz', title:'Dach & Blitzschutz', fields:[
-      { id:'module_liste', label:'Welche PV-Module wurden montiert?', type:'inverter_list', itemLabel:'Modultyp', addLabel:'+ Weiteren Modultyp hinzufügen', options:MODUL_TYPEN, mengeOptions:Array.from({ length:60 }, (_, i) => String(i + 1)), required:true },
+      { id:'module_liste', label:'Welche PV-Module wurden montiert?', type:'inverter_list', itemLabel:'Modultyp', addLabel:'+ Weiteren Modultyp hinzufügen', options:MODUL_TYPEN, mengeOptions:Array.from({ length:500 }, (_, i) => String(i + 1)), required:true },
       { id:'blitzschutz_vorhanden', label:'Blitzschutz auf dem Dach vorhanden?', type:'yes_no', required:true, remark:'Bemerkung' },
       { id:'anlage_blitzschutz_eingebunden', label:'Anlage im Blitzschutz eingebunden?', type:'yes_no', required:true, remark:'Bemerkung', visibleIf:{ field:'blitzschutz_vorhanden', equals:'yes' } },
       { id:'potentialausgleich_dach', label:'Potentialausgleich auf dem Dach angeschlossen?', type:'yes_no', required:true, remark:'Bemerkung' },
