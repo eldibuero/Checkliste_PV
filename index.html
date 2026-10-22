@@ -423,13 +423,15 @@ function buildPrintDoc(steps){
 /* ---------- Entwurf: Zwischenspeicher im Browser und Datei ---------- */
 const DRAFT_KEY = 'eldi-checkliste-pv-entwurf';
 function saveLocal(){
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ values:state.values, remarks:state.remarks, remarkOpen:state.remarkOpen })); } catch(e) {}
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt:new Date().toISOString(), values:state.values, remarks:state.remarks, remarkOpen:state.remarkOpen })); return true; } catch(e) { return false; }
 }
-function loadLocal(){
-  try {
-    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-    if (d) { state.values = d.values || {}; state.remarks = d.remarks || {}; state.remarkOpen = d.remarkOpen || {}; }
-  } catch(e) {}
+function getStoredDraft(){
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch(e) { return null; }
+}
+function saveDraftManual(){
+  const ok = saveLocal();
+  state.draftMsg = ok ? 'Entwurf auf diesem Gerät gespeichert.' : 'Speichern im Browser ist nicht möglich. Bitte Entwurf als Datei speichern.';
+  render();
 }
 function draftFileName(){
   const obj = (state.values.objekt || 'ohne_Objekt').replace(/[^A-Za-z0-9äöüÄÖÜß-]+/g, '_').replace(/^_+|_+$/g, '') || 'ohne_Objekt';
@@ -458,6 +460,7 @@ function importDraft(file){
 function resetDraft(){
   if (!confirm('Alle Eingaben dieses Formulars verwerfen?')) return;
   state.values = {}; state.remarks = {}; state.remarkOpen = {}; state.step = 0; state.showErrors = false;
+  try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
   render();
 }
 function importRow(){
@@ -470,9 +473,32 @@ function importRow(){
   return row;
 }
 
+/* ---------- Entwurf-Hinweis beim Öffnen ---------- */
+function draftBanner(){
+  const d = getStoredDraft();
+  const box = el('div', { class:'msg warn show' });
+  const when = d && d.savedAt ? new Date(d.savedAt).toLocaleString('de-DE') : '';
+  box.appendChild(el('div', null, 'Auf diesem Gerät liegt ein gespeicherter Entwurf' + (when ? ' vom ' + when : '') + '.'));
+  const row = el('div', { class:'tools' });
+  const go = el('button', { type:'button', class:'btn' }, 'Entwurf fortsetzen');
+  go.onclick = () => {
+    if (d) { state.values = d.values || {}; state.remarks = d.remarks || {}; state.remarkOpen = d.remarkOpen || {}; }
+    state.draftDecided = true; state.step = 0; render();
+  };
+  const no = el('button', { type:'button', class:'btn ghost' }, 'Verwerfen und neu beginnen');
+  no.onclick = () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+    state.values = {}; state.remarks = {}; state.remarkOpen = {};
+    state.draftDecided = true; render();
+  };
+  row.appendChild(go);
+  row.appendChild(no);
+  box.appendChild(row);
+  return box;
+}
+
 /* ---------- Hauptrendering ---------- */
 function render(){
-  saveLocal();
   const steps = getSteps();
   if (state.step > steps.length - 1) state.step = steps.length - 1;
   const cur = steps[state.step];
@@ -486,6 +512,9 @@ function render(){
   tt.appendChild(el('div', { class:'top-title' }, 'Checkliste PV-Anlage'));
   tt.appendChild(el('div', { class:'top-sub' }, 'ELDI Elektro-Dietrich GmbH'));
   top.appendChild(tt);
+  const saveBtn = el('button', { type:'button', class:'link', style:'margin-left:auto' }, 'Entwurf speichern');
+  saveBtn.onclick = saveDraftManual;
+  top.appendChild(saveBtn);
   app.appendChild(top);
 
   const pct = Math.round(state.step / total * 100);
@@ -494,11 +523,13 @@ function render(){
   pr.appendChild(bar); app.appendChild(pr);
 
   const main = el('main');
+  if (state.draftMsg) main.appendChild(el('div', { class:'msg ok show' }, state.draftMsg));
   if (cur.kind === 'summary') {
     renderSummary(main, steps);
   } else {
     main.appendChild(el('h2', null, cur.title));
     main.appendChild(el('div', { class:'step-sub' }, 'Schritt ' + (state.step + 1) + ' von ' + total));
+    if (cur.kind === 'header' && !state.draftDecided && getStoredDraft()) main.appendChild(draftBanner());
     cur.fields.forEach(f => main.appendChild(renderField(f)));
     if (cur.kind === 'header') main.appendChild(importRow());
     const miss = missingIn(cur.fields);
@@ -511,7 +542,7 @@ function render(){
   const nav = el('nav', { class:'nav' });
   const back = el('button', { type:'button', class:'btn ghost' }, 'Zurück');
   back.disabled = state.step === 0;
-  back.onclick = () => { state.step--; state.showErrors = false; window.scrollTo(0,0); render(); };
+  back.onclick = () => { state.step--; state.showErrors = false; state.draftMsg = null; window.scrollTo(0,0); render(); };
   nav.appendChild(back);
 
   if (cur.kind === 'summary') {
@@ -526,6 +557,7 @@ function render(){
       const miss = missingIn(cur.fields);
       if (miss.length) { state.showErrors = true; render(); return; }
       state.showErrors = false;
+      state.draftMsg = null;
       state.step++;
       window.scrollTo(0,0);
       render();
@@ -535,7 +567,6 @@ function render(){
   app.appendChild(nav);
 }
 
-loadLocal();
 render();
 </script>
 </body>
