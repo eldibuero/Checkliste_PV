@@ -113,6 +113,15 @@ const SPEICHER_TYPEN = [
   'SMA HS-BM-3.28-10',
   'Anderer Speicher (bitte Bemerkung nutzen)'
 ];
+const MODUL_TYPEN = [
+  'Meyer Burger White 370Wp','Meyer Burger White 370Wp Project','Meyer Burger White 375Wp','Meyer Burger White 385Wp',
+  'Meyer Burger White 390Wp','Meyer Burger White 395Wp','Meyer Burger White 395Wp Project','Meyer Burger White 400Wp',
+  'Meyer Burger White 400Wp Project','Meyer Burger Black 375Wp','Meyer Burger Black 380Wp','Meyer Burger Black 385Wp',
+  'Meyer Burger Black 390Wp','Meyer Burger Black 395Wp','Meyer Burger Black 395Wp Project','Meyer Burger Glas 380Wp',
+  'Meyer Burger Glas 385Wp','Meyer Burger Glas 390Wp Project','AIKO A485-MCE54Db Glas Glas Black',
+  'AIKO Neostar 3P AIKO-A500-MCE54Mw - 500 Wp','Hyundai 415 Wp',
+  'Anderer Modultyp (bitte Bemerkung nutzen)'
+];
 const SCHEMA = {
   header: [
     { id:'objekt', label:'Objekt', type:'text', required:true, hint:'Anlagenbezeichnung oder Adresse' },
@@ -122,6 +131,7 @@ const SCHEMA = {
   ],
   blocks: [
     { id:'dach_blitzschutz', title:'Dach & Blitzschutz', fields:[
+      { id:'module_liste', label:'Welche PV-Module wurden montiert?', type:'inverter_list', itemLabel:'Modultyp', addLabel:'+ Weiteren Modultyp hinzufügen', options:MODUL_TYPEN, mengeOptions:Array.from({ length:60 }, (_, i) => String(i + 1)), required:true },
       { id:'blitzschutz_vorhanden', label:'Blitzschutz auf dem Dach vorhanden?', type:'yes_no', required:true, remark:'Bemerkung' },
       { id:'anlage_blitzschutz_eingebunden', label:'Anlage im Blitzschutz eingebunden?', type:'yes_no', required:true, remark:'Bemerkung', visibleIf:{ field:'blitzschutz_vorhanden', equals:'yes' } },
       { id:'potentialausgleich_dach', label:'Potentialausgleich auf dem Dach angeschlossen?', type:'yes_no', required:true, remark:'Bemerkung' },
